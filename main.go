@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"io"
 	"log"
 	"net"
+	"os"
 	"sync"
 	"time"
 
+	"github.com/appleboy/graceful"
 	"github.com/valyala/fasthttp"
 )
 
@@ -95,6 +98,35 @@ func main() {
 		}
 	}()
 
-	// pass plain function to fasthttp
-	log.Fatal(fasthttp.ListenAndServe(":13002", fastHTTPHandler))
+	server := &fasthttp.Server{
+		Handler:              fastHTTPHandler,
+		ReadTimeout:          15 * time.Second,
+		WriteTimeout:         15 * time.Second,
+		MaxConnsPerIP:        500,
+		MaxRequestsPerConn:   500,
+		MaxKeepaliveDuration: 25 * time.Second,
+	}
+
+	addr := ":13002"
+	// Start server
+	go func() {
+		log.Printf("%s listening on address %s\n", server.Name, addr)
+		if err := server.ListenAndServe(addr); err != nil {
+			log.Fatalf("Error in ListenAndServe: %s\n", err)
+		}
+	}()
+
+	graceful.NewManager().AddRunningJob(func(ctx context.Context) error {
+		<-ctx.Done()
+		server.DisableKeepalive = true
+		if err := server.Shutdown(); err != nil {
+			log.Println("Shutdown err", err)
+			defer os.Exit(1)
+		} else {
+			log.Println("gracefully stopped")
+		}
+		return nil
+	})
+
+	<-graceful.NewManager().Done()
 }
