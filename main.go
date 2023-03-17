@@ -9,6 +9,14 @@ import (
 	"time"
 )
 
+var poolGuard chan struct{}
+
+const MaxGoroutine = 512
+
+func init() {
+	poolGuard = make(chan struct{}, MaxGoroutine)
+}
+
 func handleTunneling(w http.ResponseWriter, r *http.Request) {
 	destConn, err := net.DialTimeout("tcp", r.Host, 10*time.Second)
 	if err != nil {
@@ -59,10 +67,20 @@ func copyHeader(dst, src http.Header) {
 	}
 }
 
+func acquireRequestPool() {
+	poolGuard <- struct{}{} // Would block if guard channel is full
+}
+
+func releaseRequestPool() {
+	<-poolGuard
+}
+
 func main() {
 	server := &http.Server{
 		Addr: ":13002",
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			acquireRequestPool()
+			defer releaseRequestPool()
 			if r.Method == http.MethodConnect {
 				handleTunneling(w, r)
 			} else {
