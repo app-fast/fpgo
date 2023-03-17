@@ -24,7 +24,6 @@ func transfer(wg *sync.WaitGroup, destination io.WriteCloser, source io.ReadClos
 			log.Print(err)
 		}
 	}()
-	wg.Add(1)
 	defer wg.Done()
 	// defer destination.Close()
 	// defer source.Close()
@@ -67,10 +66,11 @@ func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
 		defer clientConn.Close()
 		defer destConn.Close()
 		wg := sync.WaitGroup{}
+		wg.Add(1)
 		go transfer(&wg, destConn, clientConn)
 		go transfer(&wg, clientConn, destConn)
 		wg.Wait()
-		time.Sleep(3000 * time.Millisecond)
+		// time.Sleep(10 * time.Second)
 	})
 }
 
