@@ -25,8 +25,6 @@ func transfer(wg *sync.WaitGroup, destination io.WriteCloser, source io.ReadClos
 		}
 	}()
 	defer wg.Done()
-	// defer destination.Close()
-	// defer source.Close()
 	if _, err := io.Copy(destination, source); err != nil {
 		log.Println(err)
 	}
