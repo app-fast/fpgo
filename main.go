@@ -61,8 +61,8 @@ func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
-		defer clientConn.Close()
-		defer destConn.Close()
+		// defer clientConn.Close()
+		// defer destConn.Close()
 		wg := sync.WaitGroup{}
 		wg.Add(2)
 		go transfer(&wg, destConn, clientConn)
