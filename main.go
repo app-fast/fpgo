@@ -66,11 +66,10 @@ func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
 		defer clientConn.Close()
 		defer destConn.Close()
 		wg := sync.WaitGroup{}
-		wg.Add(1)
+		wg.Add(2)
 		go transfer(&wg, destConn, clientConn)
 		go transfer(&wg, clientConn, destConn)
 		wg.Wait()
-		// time.Sleep(10 * time.Second)
 	})
 }
 
