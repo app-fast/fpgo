@@ -6,3 +6,4 @@ Credits: https://www.sobyte.net/post/2021-09/https-proxy-in-golang-in-less-than-
 
 * Fasthttp
 * http/https proxy
+* ws/wss proxy
