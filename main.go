@@ -1,12 +1,15 @@
 package main
 
 import (
-	"crypto/tls"
+	"fmt"
 	"io"
 	"log"
 	"net"
 	"net/http"
+	"sync"
 	"time"
+
+	"github.com/valyala/fasthttp"
 )
 
 var poolGuard chan struct{}
@@ -17,29 +20,36 @@ func init() {
 	poolGuard = make(chan struct{}, MaxGoroutine)
 }
 
-func handleTunneling(w http.ResponseWriter, r *http.Request) {
-	destConn, err := net.DialTimeout("tcp", r.Host, 10*time.Second)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	hijacker, ok := w.(http.Hijacker)
-	if !ok {
-		http.Error(w, "Hijacking not supported", http.StatusInternalServerError)
-		return
-	}
-	clientConn, _, err := hijacker.Hijack()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-	}
-	go transfer(destConn, clientConn)
-	go transfer(clientConn, destConn)
-}
+// func handleTunneling(w http.ResponseWriter, r *http.Request) {
+// 	destConn, err := net.DialTimeout("tcp", r.Host, 10*time.Second)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+// 		return
+// 	}
+// 	w.WriteHeader(http.StatusOK)
+// 	hijacker, ok := w.(http.Hijacker)
+// 	if !ok {
+// 		http.Error(w, "Hijacking not supported", http.StatusInternalServerError)
+// 		return
+// 	}
+// 	clientConn, _, err := hijacker.Hijack()
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+// 	}
+// 	go transfer(destConn, clientConn)
+// 	go transfer(clientConn, destConn)
+// }
 
-func transfer(destination io.WriteCloser, source io.ReadCloser) {
-	defer destination.Close()
-	defer source.Close()
+func transfer(wg *sync.WaitGroup, destination io.WriteCloser, source io.ReadCloser) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Print(err)
+		}
+	}()
+	wg.Add(1)
+	defer wg.Done()
+	// defer destination.Close()
+	// defer source.Close()
 	if _, err := io.Copy(destination, source); err != nil {
 		log.Println(err)
 	}
@@ -75,23 +85,65 @@ func releaseRequestPool() {
 	<-poolGuard
 }
 
-func main() {
-	server := &http.Server{
-		Addr: ":13002",
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			acquireRequestPool()
-			defer releaseRequestPool()
-			if r.Method == http.MethodConnect {
-				handleTunneling(w, r)
-			} else {
-				handleHTTP(w, r)
-			}
-		}),
-		ReadTimeout:       15 * time.Second,
-		ReadHeaderTimeout: 15 * time.Second,
-		// Disable HTTP/2.
-		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
+func handleFastHTTP(ctx *fasthttp.RequestCtx) {
+
+}
+
+func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
+	destHost := string(ctx.Request.Header.Peek("Host"))
+	destConn, err := fasthttp.DialTimeout(destHost, 10*time.Second)
+	if err != nil {
+		log.Panic(err)
+		return
 	}
 
-	log.Fatal(server.ListenAndServe())
+	ctx.Hijack(func(clientConn net.Conn) {
+		defer func() {
+			if err := recover(); err != nil {
+				log.Print(err)
+			}
+		}()
+		defer clientConn.Close()
+		defer destConn.Close()
+		wg := sync.WaitGroup{}
+		go transfer(&wg, destConn, clientConn)
+		go transfer(&wg, clientConn, destConn)
+		wg.Wait()
+		time.Sleep(3000 * time.Millisecond)
+	})
+
+	// fmt.Fprintf(ctx, "Hijacked the connection!")
+}
+
+// request handler in fasthttp style, i.e. just plain function.
+func fastHTTPHandler(ctx *fasthttp.RequestCtx) {
+	switch string(ctx.Method()) {
+	case fasthttp.MethodConnect:
+		handleFastHTTPS(ctx)
+	default:
+		handleFastHTTP(ctx)
+		fmt.Fprintf(ctx, "Hi there! RequestURI is %q", ctx.RequestURI())
+	}
+}
+
+func main() {
+	// server := &http.Server{
+	// 	Addr: ":13002",
+	// 	Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// 		acquireRequestPool()
+	// 		defer releaseRequestPool()
+	// 		if r.Method == http.MethodConnect {
+	// 			handleTunneling(w, r)
+	// 		} else {
+	// 			handleHTTP(w, r)
+	// 		}
+	// 	}),
+	// 	ReadTimeout:       15 * time.Second,
+	// 	ReadHeaderTimeout: 15 * time.Second,
+	// 	// Disable HTTP/2.
+	// 	TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
+	// }
+
+	// pass plain function to fasthttp
+	log.Fatal(fasthttp.ListenAndServe(":13002", fastHTTPHandler))
 }
