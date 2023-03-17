@@ -87,16 +87,16 @@ func main() {
 	}()
 
 	server := &fasthttp.Server{
-		Handler:              fastHTTPHandler,
-		ReadTimeout:          15 * time.Second,
-		WriteTimeout:         15 * time.Second,
-		MaxConnsPerIP:        500,
-		MaxRequestsPerConn:   500,
-		MaxKeepaliveDuration: 25 * time.Second,
-		ReduceMemoryUsage:    true,
-		KeepHijackedConns:    true,
-		CloseOnShutdown:      true,
-		Concurrency:          MaxConcurrent,
+		Handler:            fastHTTPHandler,
+		ReadTimeout:        15 * time.Second,
+		WriteTimeout:       15 * time.Second,
+		MaxConnsPerIP:      500,
+		MaxRequestsPerConn: 500,
+		IdleTimeout:        25 * time.Second,
+		ReduceMemoryUsage:  true,
+		KeepHijackedConns:  true,
+		CloseOnShutdown:    true,
+		Concurrency:        MaxConcurrent,
 	}
 
 	// Start server
