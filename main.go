@@ -13,13 +13,10 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-var poolGuard chan struct{}
-
-const MaxGoroutine = 512
-
-func init() {
-	poolGuard = make(chan struct{}, MaxGoroutine)
-}
+const (
+	MaxConcurrent = 512
+	addr          = ":13002"
+)
 
 func transfer(wg *sync.WaitGroup, destination io.WriteCloser, source io.ReadCloser) {
 	defer func() {
@@ -31,14 +28,6 @@ func transfer(wg *sync.WaitGroup, destination io.WriteCloser, source io.ReadClos
 	if _, err := io.Copy(destination, source); err != nil {
 		log.Println(err)
 	}
-}
-
-func acquireRequestPool() {
-	poolGuard <- struct{}{} // Would block if guard channel is full
-}
-
-func releaseRequestPool() {
-	<-poolGuard
 }
 
 var client fasthttp.Client
@@ -81,8 +70,7 @@ func fastHTTPHandler(ctx *fasthttp.RequestCtx) {
 			log.Print(err)
 		}
 	}()
-	acquireRequestPool()
-	defer releaseRequestPool()
+
 	switch string(ctx.Method()) {
 	case fasthttp.MethodConnect:
 		handleFastHTTPS(ctx)
@@ -105,9 +93,12 @@ func main() {
 		MaxConnsPerIP:        500,
 		MaxRequestsPerConn:   500,
 		MaxKeepaliveDuration: 25 * time.Second,
+		ReduceMemoryUsage:    true,
+		KeepHijackedConns:    true,
+		CloseOnShutdown:      true,
+		Concurrency:          MaxConcurrent,
 	}
 
-	addr := ":13002"
 	// Start server
 	go func() {
 		log.Printf("%s listening on address %s\n", server.Name, addr)
