@@ -44,7 +44,6 @@ func releaseRequestPool() {
 var client fasthttp.Client
 
 func handleFastHTTP(ctx *fasthttp.RequestCtx) {
-	// client := fasthttp.Client{}
 	if err := client.DoTimeout(&ctx.Request, &ctx.Response, 10*time.Second); err != nil {
 		log.Println(err)
 	}
