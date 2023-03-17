@@ -19,6 +19,7 @@ fpgo
 # Protobuf gen
 # *.pb.go
 
+*.tar.gz
 
 # mockgen
 mock
