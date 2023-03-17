@@ -1,0 +1,5 @@
+.editorconfig
+.git
+Dockerfile
+.dockerignore
+docker-compose.*
