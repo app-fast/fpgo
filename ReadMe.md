@@ -1,4 +1,4 @@
-### Fasthttp forward proxy
+## Fasthttp forward proxy
 
 ### Features
 
@@ -8,6 +8,12 @@
 * Transparent compression
 * Multi DNS resolvers (Default: 1.1.1.1,8.8.8.8)
 * Graceful shutdown
+
+### Usage
+
+```sh
+curl -x http://localhost:13002 http(s)://example.com
+```
 
 ### Credits
 
