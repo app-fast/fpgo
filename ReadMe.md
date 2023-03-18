@@ -6,12 +6,14 @@
 * http/https proxy
 * ws/wss proxy
 * Transparent compression
-* Multi DNS resolvers (Default: 1.1.1.1,8.8.8.8)
+* Multi DNS resolvers (-n "1.1.1.1:53,8.8.8.8:53")
 * Graceful shutdown
 
 ### Usage
 
 ```sh
+./fpgo -h # Show usage
+./fpgo -a "0.0.0.0:13002" -c 1000 -n "8.8.8.8:53,1.1.1.1:53" -t 30s
 curl -x http://localhost:13002 http(s)://example.com
 ```
 

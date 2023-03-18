@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"flag"
 	"io"
 	"log"
 	"math/rand"
 	"net"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,23 +17,34 @@ import (
 )
 
 const (
-	MaxConcurrent = 512
-	addr          = ":13002"
+	DefaultMaxConcurrent = 512
+	DefaultAddr          = ":13002"
+	DefaultDNS           = "8.8.8.8:53,1.1.1.1:53"
 )
 
 var (
-	dnsresolvers = []string{"8.8.8.8:53", "1.1.1.1:53"}
+	addrF          = flag.String("a", DefaultAddr, `Listen address. Default: ":13002"`)
+	maxConcurrentF = flag.Int("c", DefaultMaxConcurrent, "Max concurrency for fasthttp server")
+	dnsresolversF  = flag.String("n", "", `DNS nameserves, E.g. "8.8.8.8:53" or "1.1.1.1:53,8.8.8.8:53". Default: ""`)
+	timeoutF       = flag.Duration("t", 20*time.Second, `Connection timeout. Examples: 1m or 10s Default: 20s`)
+	usageF         = flag.Bool("h", false, "")
+
+	addr          string
+	maxConcurrent int
+	dns           []string
+	timeout       time.Duration
+
+	defaultResolver = &net.Resolver{
+		PreferGo:     true,
+		StrictErrors: false,
+		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+			d := net.Dialer{}
+			return d.DialContext(ctx, "udp", randomDNS())
+		},
+	}
 
 	defaultDialer = fasthttp.TCPDialer{
-		Concurrency: MaxConcurrent,
-		Resolver: &net.Resolver{
-			PreferGo:     true,
-			StrictErrors: false,
-			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-				d := net.Dialer{}
-				return d.DialContext(ctx, "udp", randomDNS())
-			},
-		},
+		Concurrency:      maxConcurrent,
 		DNSCacheDuration: time.Minute,
 	}
 
@@ -42,6 +55,23 @@ var (
 )
 
 func init() {
+	flag.Parse()
+	if *usageF {
+		flag.Usage()
+		os.Exit(0)
+	}
+
+	addr = *addrF
+	maxConcurrent = *maxConcurrentF
+	dns = strings.FieldsFunc(*dnsresolversF, func(c rune) bool {
+		return c == ','
+	})
+	timeout = *timeoutF
+
+	if len(dns) > 0 {
+		defaultDialer.Resolver = defaultResolver
+	}
+
 	rand.Seed(time.Now().UnixNano())
 }
 
@@ -52,7 +82,7 @@ func randomGen(max int) int {
 
 // randomDNS
 func randomDNS() string {
-	return dnsresolvers[randomGen(len(dnsresolvers))]
+	return dns[randomGen(len(dns))]
 }
 
 func transfer(wg *sync.WaitGroup, destination io.WriteCloser, source io.ReadCloser) {
@@ -68,7 +98,7 @@ func transfer(wg *sync.WaitGroup, destination io.WriteCloser, source io.ReadClos
 }
 
 func handleFastHTTP(ctx *fasthttp.RequestCtx) {
-	if err := fastclient.DoTimeout(&ctx.Request, &ctx.Response, 10*time.Second); err != nil {
+	if err := fastclient.DoTimeout(&ctx.Request, &ctx.Response, timeout); err != nil {
 		log.Println(err)
 	}
 }
@@ -122,19 +152,22 @@ func main() {
 
 	server := &fasthttp.Server{
 		Handler:            fasthttp.CompressHandler(fastHTTPHandler),
-		ReadTimeout:        15 * time.Second,
-		WriteTimeout:       15 * time.Second,
+		ReadTimeout:        timeout,
+		WriteTimeout:       timeout,
 		MaxConnsPerIP:      500,
 		MaxRequestsPerConn: 500,
-		IdleTimeout:        25 * time.Second,
+		IdleTimeout:        3 * timeout,
 		ReduceMemoryUsage:  true,
 		CloseOnShutdown:    true,
-		Concurrency:        MaxConcurrent,
+		Concurrency:        maxConcurrent,
 	}
 
 	// Start server
 	go func() {
-		log.Printf("%s listening on address %s\n", server.Name, addr)
+		log.Printf("Concurrency: %d\n", maxConcurrent)
+		log.Printf("Nameservers: %s\n", *dnsresolversF)
+		log.Printf("Connection timeout is %s\n", timeout)
+		log.Printf("listening on address %s\n", addr)
 		if err := server.ListenAndServe(addr); err != nil {
 			log.Fatalf("Error in ListenAndServe: %s\n", err)
 		}
