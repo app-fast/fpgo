@@ -3,3 +3,5 @@
 Dockerfile
 .dockerignore
 docker-compose.*
+.vscode
+.gitignore
