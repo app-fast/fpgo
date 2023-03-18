@@ -11,8 +11,24 @@
 
 ### Usage
 
-```sh
+```
 ./fpgo -h # Show usage
+
+Usage of ./fpgo:
+  -a string
+        Listen address. (default ":13002")
+  -c int
+        Max concurrency for fasthttp server (default 512)
+  -h
+  -n string
+        DNS nameserves, E.g. "8.8.8.8:53" or "1.1.1.1:53,8.8.8.8:53". Default is empty
+  -t duration
+        Connection timeout. Examples: 1m or 10s (default 20s)
+```
+
+### Example
+
+```fish
 ./fpgo -a "0.0.0.0:13002" -c 1000 -n "8.8.8.8:53,1.1.1.1:53" -t 30s
 curl -x http://localhost:13002 http(s)://example.com
 ```
