@@ -87,6 +87,7 @@ func transfer(wg *sync.WaitGroup, destination io.WriteCloser, source io.ReadClos
 			log.Print(err)
 		}
 	}()
+
 	defer wg.Done()
 	if _, err := io.Copy(destination, source); err != nil {
 		log.Println(err)
@@ -125,12 +126,6 @@ func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
 
 // request handler in fasthttp style, i.e. just plain function.
 func fastHTTPHandler(ctx *fasthttp.RequestCtx) {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Print(err)
-		}
-	}()
-
 	switch string(ctx.Method()) {
 	case fasthttp.MethodConnect:
 		handleFastHTTPS(ctx)
@@ -140,12 +135,6 @@ func fastHTTPHandler(ctx *fasthttp.RequestCtx) {
 }
 
 func main() {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Print(err)
-		}
-	}()
-
 	server := &fasthttp.Server{
 		Handler:            fasthttp.CompressHandler(fastHTTPHandler),
 		ReadTimeout:        timeout,
