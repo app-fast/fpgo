@@ -76,7 +76,6 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-// randomDNS
 func randomDNS() string {
 	return dns[rand.Intn(len(dns))]
 }
@@ -102,12 +101,6 @@ func handleFastHTTP(ctx *fasthttp.RequestCtx) {
 
 func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
 	ctx.Hijack(func(clientConn net.Conn) {
-		defer func() {
-			if err := recover(); err != nil {
-				log.Print(err)
-			}
-		}()
-
 		destConn, err := defaultDialer.DialTimeout(string(ctx.Host()), 10*time.Second)
 		if err != nil {
 			log.Println(err)
