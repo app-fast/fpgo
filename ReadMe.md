@@ -5,6 +5,7 @@
 * Fasthttp
 * http/https proxy
 * ws/wss proxy
+* Transparent compression
 * Graceful shutdown
 
 ### Credits

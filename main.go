@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"log"
+	"math/rand"
 	"net"
 	"os"
 	"sync"
@@ -18,6 +19,41 @@ const (
 	addr          = ":13002"
 )
 
+var (
+	dnsresolvers = []string{"8.8.8.8:53", "1.1.1.1:53"}
+
+	defaultDialer = fasthttp.TCPDialer{
+		Concurrency: MaxConcurrent,
+		Resolver: &net.Resolver{
+			PreferGo:     true,
+			StrictErrors: false,
+			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+				d := net.Dialer{}
+				return d.DialContext(ctx, "udp", randomDNS())
+			},
+		},
+	}
+
+	fastclient = fasthttp.Client{
+		NoDefaultUserAgentHeader: true,
+		Dial:                     defaultDialer.Dial,
+	}
+)
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+// randomGen Generate random int with range [0, max)
+func randomGen(max int) int {
+	return rand.Intn(max)
+}
+
+// randomDNS
+func randomDNS() string {
+	return dnsresolvers[randomGen(len(dnsresolvers))]
+}
+
 func transfer(wg *sync.WaitGroup, destination io.WriteCloser, source io.ReadCloser) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -30,10 +66,8 @@ func transfer(wg *sync.WaitGroup, destination io.WriteCloser, source io.ReadClos
 	}
 }
 
-var client fasthttp.Client
-
 func handleFastHTTP(ctx *fasthttp.RequestCtx) {
-	if err := client.DoTimeout(&ctx.Request, &ctx.Response, 10*time.Second); err != nil {
+	if err := fastclient.DoTimeout(&ctx.Request, &ctx.Response, 10*time.Second); err != nil {
 		log.Println(err)
 	}
 }
@@ -46,8 +80,7 @@ func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
 			}
 		}()
 
-		destHost := string(ctx.Request.Header.Peek("Host"))
-		destConn, err := fasthttp.DialTimeout(destHost, 10*time.Second)
+		destConn, err := defaultDialer.DialTimeout(string(ctx.Host()), 10*time.Second)
 		if err != nil {
 			log.Println(err)
 			return
@@ -87,7 +120,7 @@ func main() {
 	}()
 
 	server := &fasthttp.Server{
-		Handler:            fastHTTPHandler,
+		Handler:            fasthttp.CompressHandler(fastHTTPHandler),
 		ReadTimeout:        15 * time.Second,
 		WriteTimeout:       15 * time.Second,
 		MaxConnsPerIP:      500,
