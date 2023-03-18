@@ -6,6 +6,7 @@
 * http/https proxy
 * ws/wss proxy
 * Transparent compression
+* Multi DNS resolvers (Default: 1.1.1.1,8.8.8.8)
 * Graceful shutdown
 
 ### Credits
