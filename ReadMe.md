@@ -6,7 +6,7 @@
 * http/https proxy
 * ws/wss proxy
 * Transparent compression
-* Multi DNS resolvers (-n "1.1.1.1:53,8.8.8.8:53")
+* Multi DNS nameserves (-n "1.1.1.1:53,8.8.8.8:53")
 * Graceful shutdown
 
 ### Usage
