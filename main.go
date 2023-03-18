@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"io"
 	"log"
 	"math/rand"
@@ -27,7 +26,7 @@ const (
 var (
 	addrF          = flag.String("a", DefaultAddr, `Listen address.`)
 	maxConcurrentF = flag.Int("c", DefaultMaxConcurrent, "Max concurrency for fasthttp server")
-	dnsresolversF  = flag.String("n", "", fmt.Sprintf(`DNS nameserves, E.g. "8.8.8.8:53" or "1.1.1.1:53,8.8.8.8:53". Default: "%s"`, DefaultDNS))
+	dnsresolversF  = flag.String("n", "", `DNS nameserves, E.g. "8.8.8.8:53" or "1.1.1.1:53,8.8.8.8:53". Default is empty`)
 	timeoutF       = flag.Duration("t", 20*time.Second, `Connection timeout. Examples: 1m or 10s`)
 	usageF         = flag.Bool("h", false, "")
 
