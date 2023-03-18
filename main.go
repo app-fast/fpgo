@@ -32,6 +32,7 @@ var (
 				return d.DialContext(ctx, "udp", randomDNS())
 			},
 		},
+		DNSCacheDuration: time.Minute,
 	}
 
 	fastclient = fasthttp.Client{
@@ -127,7 +128,6 @@ func main() {
 		MaxRequestsPerConn: 500,
 		IdleTimeout:        25 * time.Second,
 		ReduceMemoryUsage:  true,
-		KeepHijackedConns:  true,
 		CloseOnShutdown:    true,
 		Concurrency:        MaxConcurrent,
 	}
