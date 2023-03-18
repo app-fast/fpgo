@@ -28,3 +28,5 @@ mock
 graph/generated
 
 .DS_Store
+
+.vscode
