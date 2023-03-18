@@ -19,7 +19,7 @@ Usage of ./fpgo:
         Listen address. (default ":13002")
   -c int
         Max concurrency for fasthttp server (default 512)
-  -h
+  -h    Show usage
   -n string
         DNS nameserves, E.g. "8.8.8.8:53" or "1.1.1.1:53,8.8.8.8:53". Default is empty
   -t duration
