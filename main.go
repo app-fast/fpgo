@@ -28,7 +28,7 @@ var (
 	maxConcurrentF = flag.Int("c", DefaultMaxConcurrent, "Max concurrency for fasthttp server")
 	dnsresolversF  = flag.String("n", "", `DNS nameserves, E.g. "8.8.8.8:53" or "1.1.1.1:53,8.8.8.8:53". Default is empty`)
 	timeoutF       = flag.Duration("t", 20*time.Second, `Connection timeout. Examples: 1m or 10s`)
-	usageF         = flag.Bool("h", false, "")
+	usageF         = flag.Bool("h", false, "Show usage")
 
 	addr          string
 	maxConcurrent int
