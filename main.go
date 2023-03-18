@@ -76,14 +76,9 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-// randomGen Generate random int with range [0, max)
-func randomGen(max int) int {
-	return rand.Intn(max)
-}
-
 // randomDNS
 func randomDNS() string {
-	return dns[randomGen(len(dns))]
+	return dns[rand.Intn(len(dns))]
 }
 
 func transfer(wg *sync.WaitGroup, destination io.WriteCloser, source io.ReadCloser) {
