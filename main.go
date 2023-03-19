@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"io"
-	"log"
 	"math/rand"
 	"net"
 	"os"
@@ -13,6 +13,7 @@ import (
 
 	"github.com/appleboy/graceful"
 	"github.com/valyala/fasthttp"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -54,6 +55,22 @@ var (
 	}
 )
 
+func Debug(format string, args ...any) {
+	slog.Default().Debug(fmt.Sprintf(format, args...))
+}
+
+func Info(format string, args ...any) {
+	slog.Default().Info(fmt.Sprintf(format, args...))
+}
+
+func Warn(format string, args ...any) {
+	slog.Default().Warn(fmt.Sprintf(format, args...))
+}
+
+func Error(format string, args ...any) {
+	slog.Default().Error(fmt.Sprintf(format, args...))
+}
+
 func init() {
 	flag.Parse()
 	if *usageF {
@@ -82,18 +99,18 @@ func randomDNS() string {
 func transfer(destination io.WriteCloser, source io.ReadCloser) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Print(err)
+			Warn("transfer: %s", err)
 		}
 	}()
 
 	if _, err := io.Copy(destination, source); err != nil {
-		log.Println(err)
+		Debug("transfer io closed: %s", err)
 	}
 }
 
 func handleFastHTTP(ctx *fasthttp.RequestCtx) {
 	if err := fastclient.DoTimeout(&ctx.Request, &ctx.Response, timeout); err != nil {
-		log.Println(err)
+		Error("Client timeout: %s", err)
 	}
 }
 
@@ -101,7 +118,7 @@ func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
 	ctx.Hijack(func(clientConn net.Conn) {
 		destConn, err := defaultDialer.DialTimeout(string(ctx.Host()), 10*time.Second)
 		if err != nil {
-			log.Println(err)
+			Error("Dial timeout: %s", err)
 			return
 		}
 
@@ -138,12 +155,12 @@ func main() {
 
 	// Start server
 	go func() {
-		log.Printf("Concurrency: %d\n", maxConcurrent)
-		log.Printf("Nameservers: %s\n", *dnsresolversF)
-		log.Printf("Connection timeout is %s\n", timeout)
-		log.Printf("listening on address %s\n", addr)
+		Info("Concurrency: %d\n", maxConcurrent)
+		Info("Nameservers: %s\n", *dnsresolversF)
+		Info("Connection timeout is %s\n", timeout)
+		Info("listening on address %s\n", addr)
 		if err := server.ListenAndServe(addr); err != nil {
-			log.Fatalf("Error in ListenAndServe: %s\n", err)
+			Error("Error in ListenAndServe: %s\n", err)
 		}
 	}()
 
@@ -151,10 +168,10 @@ func main() {
 		<-ctx.Done()
 		server.DisableKeepalive = true
 		if err := server.Shutdown(); err != nil {
-			log.Println("Shutdown err", err)
+			Warn("Shutdown err", err)
 			defer os.Exit(1)
 		} else {
-			log.Println("gracefully stopped")
+			Info("gracefully stopped")
 		}
 		return nil
 	})
