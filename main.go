@@ -168,7 +168,7 @@ func main() {
 		<-ctx.Done()
 		server.DisableKeepalive = true
 		if err := server.Shutdown(); err != nil {
-			Warn("Shutdown err", err)
+			Warn("Shutdown err: %s", err)
 			defer os.Exit(1)
 		} else {
 			Info("gracefully stopped")
