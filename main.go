@@ -9,7 +9,6 @@ import (
 	"net"
 	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/appleboy/graceful"
@@ -80,14 +79,13 @@ func randomDNS() string {
 	return dns[rand.Intn(len(dns))]
 }
 
-func transfer(wg *sync.WaitGroup, destination io.WriteCloser, source io.ReadCloser) {
+func transfer(destination io.WriteCloser, source io.ReadCloser) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Print(err)
 		}
 	}()
 
-	defer wg.Done()
 	if _, err := io.Copy(destination, source); err != nil {
 		log.Println(err)
 	}
@@ -109,11 +107,9 @@ func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
 
 		defer clientConn.Close()
 		defer destConn.Close()
-		wg := sync.WaitGroup{}
-		wg.Add(2)
-		go transfer(&wg, destConn, clientConn)
-		go transfer(&wg, clientConn, destConn)
-		wg.Wait()
+
+		go transfer(destConn, clientConn)
+		transfer(clientConn, destConn)
 	})
 }
 
