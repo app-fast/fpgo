@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/appleboy/graceful v0.0.4
 	github.com/valyala/fasthttp v1.45.0
-	golang.org/x/exp v0.0.0-20230315142452-642cacee5cc0
+	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 )
 
 require (

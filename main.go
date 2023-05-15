@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"unsafe"
 
 	"github.com/appleboy/graceful"
 	"github.com/valyala/fasthttp"
@@ -52,6 +53,7 @@ var (
 	fastclient = fasthttp.Client{
 		NoDefaultUserAgentHeader: true,
 		Dial:                     defaultDialer.Dial,
+		MaxConnWaitTimeout:       3 * time.Second,
 	}
 )
 
@@ -116,7 +118,7 @@ func handleFastHTTP(ctx *fasthttp.RequestCtx) {
 
 func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
 	ctx.Hijack(func(clientConn net.Conn) {
-		destConn, err := defaultDialer.DialTimeout(string(ctx.Host()), 10*time.Second)
+		destConn, err := defaultDialer.DialTimeout(b2s(ctx.Host()), 10*time.Second)
 		if err != nil {
 			Error("Dial timeout: %s", err)
 			return
@@ -130,9 +132,15 @@ func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
 	})
 }
 
+// Unsafe but fast []byte to string convertion without memory copy
+func b2s(b []byte) string {
+	/* #nosec G103 */
+	return *(*string)(unsafe.Pointer(&b))
+}
+
 // request handler in fasthttp style, i.e. just plain function.
 func fastHTTPHandler(ctx *fasthttp.RequestCtx) {
-	switch string(ctx.Method()) {
+	switch b2s(ctx.Method()) {
 	case fasthttp.MethodConnect:
 		handleFastHTTPS(ctx)
 	default:
@@ -145,8 +153,8 @@ func main() {
 		Handler:            fasthttp.CompressHandler(fastHTTPHandler),
 		ReadTimeout:        timeout,
 		WriteTimeout:       timeout,
-		MaxConnsPerIP:      500,
-		MaxRequestsPerConn: 500,
+		MaxConnsPerIP:      1000,
+		MaxRequestsPerConn: 1000,
 		IdleTimeout:        3 * timeout,
 		ReduceMemoryUsage:  true,
 		CloseOnShutdown:    true,
