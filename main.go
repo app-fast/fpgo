@@ -141,7 +141,7 @@ func b2s(b []byte) string {
 // request handler in fasthttp style, i.e. just plain function.
 func fastHTTPHandler(ctx *fasthttp.RequestCtx) {
 	switch b2s(ctx.Method()) {
-	case fasthttp.MethodConnect:
+	case fasthttp.MethodConnect, "connect":
 		handleFastHTTPS(ctx)
 	default:
 		handleFastHTTP(ctx)
