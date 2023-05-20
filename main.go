@@ -164,7 +164,7 @@ func main() {
 	// Start server
 	go func() {
 		Info("Concurrency: %d\n", maxConcurrent)
-		Info("Nameservers: %s\n", *dnsresolversF)
+		Info("Nameservers: %s\n", dns)
 		Info("Connection timeout is %s\n", timeout)
 		Info("listening on address %s\n", addr)
 		if err := server.ListenAndServe(addr); err != nil {
