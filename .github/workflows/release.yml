@@ -40,15 +40,15 @@ jobs:
         GOOSARCH=${{matrix.goosarch}}
         GOOS=${GOOSARCH%/*}
         GOARCH=${GOOSARCH#*/}
-        TAR_NAME=${{github.repository}}-$GOARCH-$GOOS.tar.gz
+        TAR_NAME=${{ github.event.repository.name }}-$GOARCH-$GOOS.tar.gz
         echo "TAR_NAME=$TAR_NAME" >> $GITHUB_ENV
         echo "GOOS=$GOOS" >> $GITHUB_ENV
         echo "GOARCH=$GOARCH" >> $GITHUB_ENV
 
     - name: Build
       run: |
-        go build -o "${{github.repository}}" -v
-        tar zcvf "$TAR_NAME" "${{github.repository}}"
+        go build -o "${{ github.event.repository.name }}" -v
+        tar zcvf "$TAR_NAME" "${{ github.event.repository.name }}"
 
     - name: Release Notes
       run:
