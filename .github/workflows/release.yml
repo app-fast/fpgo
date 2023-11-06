@@ -12,6 +12,11 @@ defaults:
   run:
     shell: bash
 
+# https://github.com/softprops/action-gh-release/issues/236
+# GitHub release failed with status: 403
+permissions:
+  contents: write
+
 jobs:
 
   release:
