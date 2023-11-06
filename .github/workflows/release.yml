@@ -58,7 +58,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         body_path: ".github/RELEASE-TEMPLATE.md"
-        draft: true
+        # draft: false
         files: ${{env.TAR_NAME}}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
