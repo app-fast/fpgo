@@ -117,6 +117,7 @@ func handleFastHTTP(ctx *fasthttp.RequestCtx) {
 }
 
 func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
+	Debug("Connect to: %s\n", ctx.Host())
 	ctx.Hijack(func(clientConn net.Conn) {
 		destConn, err := defaultDialer.DialTimeout(b2s(ctx.Host()), 10*time.Second)
 		if err != nil {
@@ -140,8 +141,8 @@ func b2s(b []byte) string {
 
 // request handler in fasthttp style, i.e. just plain function.
 func fastHTTPHandler(ctx *fasthttp.RequestCtx) {
-	switch b2s(ctx.Method()) {
-	case fasthttp.MethodConnect, "connect":
+	switch strings.ToUpper(b2s(ctx.Method())) {
+	case fasthttp.MethodConnect:
 		handleFastHTTPS(ctx)
 	default:
 		handleFastHTTP(ctx)
