@@ -117,7 +117,9 @@ func handleFastHTTP(ctx *fasthttp.RequestCtx) {
 }
 
 func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
-	Debug("Connect to: %s\n", ctx.Host())
+	if len(ctx.Host()) > 0 {
+		Info("Connect to: %s\n", ctx.Host())
+	}
 	ctx.Hijack(func(clientConn net.Conn) {
 		destConn, err := defaultDialer.DialTimeout(b2s(ctx.Host()), 10*time.Second)
 		if err != nil {
