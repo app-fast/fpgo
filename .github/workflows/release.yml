@@ -48,7 +48,7 @@ jobs:
 
     - name: Build
       run: |
-        go build -o "${{ github.event.repository.name }}" -v
+        go build -o "${{ github.event.repository.name }}" -ldflags "-s -w" -v
         tar zcvf "$TAR_NAME" "${{ github.event.repository.name }}"
 
     - name: Release Notes
