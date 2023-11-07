@@ -43,7 +43,7 @@ jobs:
         GOOS=${GOOSARCH%/*}
         GOARCH=${GOOSARCH#*/}
         PKG_NAME=""
-        "$GOOS" = "windows" && PKG_NAME=${{ github.event.repository.name }}-$GOARCH-$GOOS.zip || PKG_NAME=${{ github.event.repository.name }}-$GOARCH-$GOOS.tar.gz
+        [ "$GOOS" = "windows" ] && PKG_NAME=${{ github.event.repository.name }}-$GOARCH-$GOOS.zip || PKG_NAME=${{ github.event.repository.name }}-$GOARCH-$GOOS.tar.gz
         echo "PKG_NAME=$PKG_NAME" >> $GITHUB_ENV
         echo "GOOS=$GOOS" >> $GITHUB_ENV
         echo "GOARCH=$GOARCH" >> $GITHUB_ENV
@@ -52,7 +52,7 @@ jobs:
     - name: Build
       run: |
         go build -ldflags "-s -w" -v
-        "$GOOS" = "windows" && zip "$PKG_NAME" "${{ github.event.repository.name }}".exe || tar zcvf "$PKG_NAME" "${{ github.event.repository.name }}"
+        [ "$GOOS" = "windows" ] && zip "$PKG_NAME" "${{ github.event.repository.name }}".exe || tar zcvf "$PKG_NAME" "${{ github.event.repository.name }}"
 
     - name: Release Notes
       run:
