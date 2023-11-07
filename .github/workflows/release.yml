@@ -26,6 +26,8 @@ jobs:
         goosarch:
           - 'linux/amd64'
           - 'linux/arm64'
+          - 'windows/amd64'
+          - 'darwin/arm64'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -40,16 +42,18 @@ jobs:
         GOOSARCH=${{matrix.goosarch}}
         GOOS=${GOOSARCH%/*}
         GOARCH=${GOOSARCH#*/}
-        TAR_NAME=${{ github.event.repository.name }}-$GOARCH-$GOOS.tar.gz
-        echo "TAR_NAME=$TAR_NAME" >> $GITHUB_ENV
+        COMPRESSION
+        PKG_NAME=""
+        GOOS == "windows" && PKG_NAME=${{ github.event.repository.name }}-$GOARCH-$GOOS.zip || PKG_NAME=${{ github.event.repository.name }}-$GOARCH-$GOOS.tar.gz
+        echo "PKG_NAME=$PKG_NAME" >> $GITHUB_ENV
         echo "GOOS=$GOOS" >> $GITHUB_ENV
         echo "GOARCH=$GOARCH" >> $GITHUB_ENV
         echo "CGO_ENABLED=0" >> $GITHUB_ENV
 
     - name: Build
       run: |
-        go build -o "${{ github.event.repository.name }}" -ldflags "-s -w" -v
-        tar zcvf "$TAR_NAME" "${{ github.event.repository.name }}"
+        go build -ldflags "-s -w" -v
+        GOOS == "windows" && zip "$PKG_NAME" "${{ github.event.repository.name }}".exe || tar zcvf "$PKG_NAME" "${{ github.event.repository.name }}"
 
     - name: Release Notes
       run:
@@ -60,6 +64,6 @@ jobs:
       with:
         body_path: ".github/RELEASE-TEMPLATE.md"
         # draft: false
-        files: ${{env.TAR_NAME}}
+        files: ${{env.PKG_NAME}}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
