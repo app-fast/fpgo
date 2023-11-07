@@ -46,6 +46,7 @@ jobs:
         BINARY=""
         [ "$GOOS" = "windows" ] && PKG_NAME=${{ github.event.repository.name }}-$GOARCH-$GOOS.zip || PKG_NAME=${{ github.event.repository.name }}-$GOARCH-$GOOS.tar.gz
         [ "$GOOS" = "windows" ] && BINARY="${{ github.event.repository.name }}".exe || BINARY="${{ github.event.repository.name }}"
+        echo "BINARY=$BINARY" >> $GITHUB_ENV
         echo "PKG_NAME=$PKG_NAME" >> $GITHUB_ENV
         echo "GOOS=$GOOS" >> $GITHUB_ENV
         echo "GOARCH=$GOARCH" >> $GITHUB_ENV
