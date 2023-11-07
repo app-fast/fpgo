@@ -42,7 +42,6 @@ jobs:
         GOOSARCH=${{matrix.goosarch}}
         GOOS=${GOOSARCH%/*}
         GOARCH=${GOOSARCH#*/}
-        COMPRESSION
         PKG_NAME=""
         GOOS == "windows" && PKG_NAME=${{ github.event.repository.name }}-$GOARCH-$GOOS.zip || PKG_NAME=${{ github.event.repository.name }}-$GOARCH-$GOOS.tar.gz
         echo "PKG_NAME=$PKG_NAME" >> $GITHUB_ENV
