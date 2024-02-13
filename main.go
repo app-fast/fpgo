@@ -12,7 +12,6 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/appleboy/graceful"
 	"github.com/valyala/fasthttp"
 	"golang.org/x/exp/slog"
 )
@@ -175,17 +174,5 @@ func main() {
 		}
 	}()
 
-	graceful.NewManager().AddRunningJob(func(ctx context.Context) error {
-		<-ctx.Done()
-		server.DisableKeepalive = true
-		if err := server.Shutdown(); err != nil {
-			Warn("Shutdown err: %s", err)
-			defer os.Exit(1)
-		} else {
-			Info("gracefully stopped")
-		}
-		return nil
-	})
-
-	<-graceful.NewManager().Done()
+	<-wait(server)
 }
