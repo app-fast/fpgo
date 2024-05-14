@@ -12,6 +12,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/appleboy/graceful"
 	"github.com/valyala/fasthttp"
 	"golang.org/x/exp/slog"
 )
@@ -138,6 +139,23 @@ func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
 func b2s(b []byte) string {
 	/* #nosec G103 */
 	return *(*string)(unsafe.Pointer(&b))
+}
+
+// wait graceful shutdown
+func wait(server *fasthttp.Server) <-chan struct{} {
+	graceful.NewManager().AddRunningJob(func(ctx context.Context) error {
+		<-ctx.Done()
+		server.DisableKeepalive = true
+		if err := server.Shutdown(); err != nil {
+			Warn("Shutdown err: %s", err)
+			defer os.Exit(1)
+		} else {
+			Info("gracefully stopped")
+		}
+		return nil
+	})
+
+	return graceful.NewManager().Done()
 }
 
 // request handler in fasthttp style, i.e. just plain function.
