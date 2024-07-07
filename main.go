@@ -21,14 +21,14 @@ const (
 	DefaultMaxConcurrent = 512
 	DefaultAddr          = ":13002"
 	DefaultDNS           = ""
-	DefaultTimeout       = 20 * time.Second
+	DefaultTimeout       = 60 * time.Second
 )
 
 var (
 	addrF          = flag.String("a", DefaultAddr, `Listen address.`)
 	maxConcurrentF = flag.Int("c", DefaultMaxConcurrent, "Max concurrency for fasthttp server")
-	dnsresolversF  = flag.String("n", "", `DNS nameserves, E.g. "8.8.8.8:53" or "1.1.1.1:53,8.8.8.8:53". Default is empty`)
-	timeoutF       = flag.Duration("t", 20*time.Second, `Connection timeout. Examples: 1m or 10s`)
+	dnsresolversF  = flag.String("n", DefaultDNS, `DNS nameserves, E.g. "8.8.8.8:53" or "1.1.1.1:53,8.8.8.8:53". Default is empty`)
+	timeoutF       = flag.Duration("t", DefaultTimeout, `Connection timeout. Examples: 1m or 10s`)
 	usageF         = flag.Bool("h", false, "Show usage")
 
 	addr          string
