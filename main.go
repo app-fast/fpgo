@@ -12,9 +12,10 @@ import (
 	"time"
 	"unsafe"
 
+	"log/slog"
+
 	"github.com/appleboy/graceful"
 	"github.com/valyala/fasthttp"
-	"log/slog"
 )
 
 const (
@@ -25,16 +26,20 @@ const (
 )
 
 var (
+	version = "dev"
+
 	addrF          = flag.String("a", DefaultAddr, `Listen address.`)
 	maxConcurrentF = flag.Int("c", DefaultMaxConcurrent, "Max concurrency for fasthttp server")
 	dnsresolversF  = flag.String("n", DefaultDNS, `DNS nameserves, E.g. "8.8.8.8:53" or "1.1.1.1:53,8.8.8.8:53". Default is empty`)
 	timeoutF       = flag.Duration("t", DefaultTimeout, `Connection timeout. Examples: 1m or 10s`)
 	usageF         = flag.Bool("h", false, "Show usage")
+	verF           = flag.String("v", version, "Show version")
 
 	addr          string
 	maxConcurrent int
 	dns           []string
 	timeout       time.Duration
+	ver           string
 
 	defaultResolver = &net.Resolver{
 		PreferGo:     true,
@@ -91,7 +96,11 @@ func init() {
 		defaultDialer.Resolver = defaultResolver
 	}
 
-	rand.Seed(time.Now().UnixNano())
+	if verF != nil {
+		ver = *verF
+	} else {
+		ver = version
+	}
 }
 
 func randomDNS() string {
@@ -183,6 +192,7 @@ func main() {
 
 	// Start server
 	go func() {
+		Info("Version: %s\n", ver)
 		Info("Concurrency: %d\n", maxConcurrent)
 		Info("Nameservers: %s\n", dns)
 		Info("Connection timeout is %s\n", timeout)

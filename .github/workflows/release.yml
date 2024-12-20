@@ -54,7 +54,7 @@ jobs:
 
     - name: Build
       run: |
-        go build -ldflags "-s -w" -o "$BINARY" -v
+        go build -ldflags "-s -w" -o "$BINARY -X 'main.version=${{ github.ref_name }}'" -v
         [ "$GOOS" = "windows" ] && zip "$PKG_NAME" "$BINARY" || tar zcvf "$PKG_NAME" "$BINARY"
 
     - name: Release Notes
