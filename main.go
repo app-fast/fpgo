@@ -33,7 +33,7 @@ var (
 	dnsresolversF  = flag.String("n", DefaultDNS, `DNS nameserves, E.g. "8.8.8.8:53" or "1.1.1.1:53,8.8.8.8:53". Default is empty`)
 	timeoutF       = flag.Duration("t", DefaultTimeout, `Connection timeout. Examples: 1m or 10s`)
 	usageF         = flag.Bool("h", false, "Show usage")
-	verF           = flag.String("v", version, "Show version")
+	verF           = flag.Bool("v", false, "Show version")
 
 	addr          string
 	maxConcurrent int
@@ -96,11 +96,12 @@ func init() {
 		defaultDialer.Resolver = defaultResolver
 	}
 
-	if verF != nil {
-		ver = *verF
-	} else {
-		ver = version
+	if *verF {
+		fmt.Println(version)
+		os.Exit(0)
 	}
+
+	ver = version
 }
 
 func randomDNS() string {
