@@ -7,8 +7,7 @@ toolchain go1.23.2
 require (
 	github.com/appleboy/graceful v1.1.1
 	github.com/valyala/fasthttp v1.58.0
-	golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67
-g)
+)
 
 require (
 	github.com/andybalholm/brotli v1.1.1 // indirect

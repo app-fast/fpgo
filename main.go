@@ -14,7 +14,7 @@ import (
 
 	"github.com/appleboy/graceful"
 	"github.com/valyala/fasthttp"
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 const (
