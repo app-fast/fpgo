@@ -6,7 +6,7 @@ toolchain go1.23.2
 
 require (
 	github.com/appleboy/graceful v1.1.1
-	github.com/valyala/fasthttp v1.58.0
+	github.com/valyala/fasthttp v1.59.0
 )
 
 require (
