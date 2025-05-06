@@ -57,7 +57,7 @@ var (
 
 	fastclient = fasthttp.Client{
 		NoDefaultUserAgentHeader: true,
-		Dial:                     defaultDialer.Dial,
+		Dial:                     defaultDialer.DialDualStack,
 		MaxConnWaitTimeout:       3 * time.Second,
 	}
 )
