@@ -58,7 +58,7 @@ var (
 	fastclient = fasthttp.Client{
 		NoDefaultUserAgentHeader: true,
 		Dial:                     defaultDialer.DialDualStack,
-		MaxConnWaitTimeout:       3 * time.Second,
+		MaxConnWaitTimeout:       10 * time.Second,
 	}
 )
 
@@ -121,15 +121,14 @@ func transfer(destination io.WriteCloser, source io.ReadCloser) {
 }
 
 func handleFastHTTP(ctx *fasthttp.RequestCtx) {
+	Info("Connect to: http://%s\n", ctx.Host())
 	if err := fastclient.DoTimeout(&ctx.Request, &ctx.Response, timeout); err != nil {
 		Error("Client timeout: %s", err)
 	}
 }
 
 func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
-	if len(ctx.Host()) > 0 {
-		Info("Connect to: %s\n", ctx.Host())
-	}
+	Info("Connect to: https://%s\n", ctx.Host())
 	ctx.Hijack(func(clientConn net.Conn) {
 		destConn, err := defaultDialer.DialTimeout(b2s(ctx.Host()), 10*time.Second)
 		if err != nil {
