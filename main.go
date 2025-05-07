@@ -63,19 +63,19 @@ var (
 )
 
 func Debug(format string, args ...any) {
-	slog.Default().Debug(fmt.Sprintf(format, args...))
+	slog.Debug(fmt.Sprintf(format, args...))
 }
 
 func Info(format string, args ...any) {
-	slog.Default().Info(fmt.Sprintf(format, args...))
+	slog.Info(fmt.Sprintf(format, args...))
 }
 
 func Warn(format string, args ...any) {
-	slog.Default().Warn(fmt.Sprintf(format, args...))
+	slog.Warn(fmt.Sprintf(format, args...))
 }
 
 func Error(format string, args ...any) {
-	slog.Default().Error(fmt.Sprintf(format, args...))
+	slog.Error(fmt.Sprintf(format, args...))
 }
 
 func init() {
@@ -97,7 +97,7 @@ func init() {
 	}
 
 	if *verF {
-		fmt.Println(version)
+		println(version)
 		os.Exit(0)
 	}
 

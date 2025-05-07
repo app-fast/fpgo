@@ -25,6 +25,7 @@ Usage of ./fpgo:
         DNS nameserves, E.g. "8.8.8.8:53" or "1.1.1.1:53,8.8.8.8:53". Default is empty
   -t duration
         Connection timeout. Examples: 1m or 10s (default 1m0s)
+  -v    Show version
 ```
 
 ### Example
