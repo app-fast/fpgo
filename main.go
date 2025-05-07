@@ -12,17 +12,23 @@ import (
 	"time"
 	"unsafe"
 
-	"log/slog"
-
 	"github.com/appleboy/graceful"
 	"github.com/valyala/fasthttp"
 )
+
+type LogLevel uint8
 
 const (
 	DefaultMaxConcurrent = 512
 	DefaultAddr          = ":13002"
 	DefaultDNS           = ""
 	DefaultTimeout       = 60 * time.Second
+	DefaultLogLevel      = 1
+
+	LogLevelDebug LogLevel = 0
+	LogLevelInfo  LogLevel = 1
+	LogLevelWarn  LogLevel = 2
+	LogLevelError LogLevel = 3
 )
 
 var (
@@ -32,6 +38,7 @@ var (
 	maxConcurrentF = flag.Int("c", DefaultMaxConcurrent, "Max concurrency for fasthttp server")
 	dnsresolversF  = flag.String("n", DefaultDNS, `DNS nameserves, E.g. "8.8.8.8:53" or "1.1.1.1:53,8.8.8.8:53". Default is empty`)
 	timeoutF       = flag.Duration("t", DefaultTimeout, `Connection timeout. Examples: 1m or 10s`)
+	logLevelF      = flag.Int("l", DefaultLogLevel, `Log level. Examples: 0 (debug), 1 (info), 2 (warn), 3 (error). Default is 1`)
 	usageF         = flag.Bool("h", false, "Show usage")
 	verF           = flag.Bool("v", false, "Show version")
 
@@ -39,6 +46,7 @@ var (
 	maxConcurrent int
 	dns           []string
 	timeout       time.Duration
+	logLevel      LogLevel
 	ver           string
 
 	defaultResolver = &net.Resolver{
@@ -63,19 +71,55 @@ var (
 )
 
 func Debug(format string, args ...any) {
-	slog.Debug(fmt.Sprintf(format, args...))
+	if logLevel > 0 {
+		return
+	}
+	if len(args) == 0 {
+		format += "\n" // append line break if no arg
+	}
+	fmt.Printf("%s %s %s",
+		time.Now().Local().Format("[2006-01-02 15:04:05]"),
+		"DEBUG",
+		fmt.Sprintf(format, args...))
 }
 
 func Info(format string, args ...any) {
-	slog.Info(fmt.Sprintf(format, args...))
+	if logLevel > 1 {
+		return
+	}
+	if len(args) == 0 {
+		format += "\n" // append line break if no arg
+	}
+	fmt.Printf("%s %s %s",
+		time.Now().Local().Format("[2006-01-02 15:04:05]"),
+		"INFO",
+		fmt.Sprintf(format, args...))
 }
 
 func Warn(format string, args ...any) {
-	slog.Warn(fmt.Sprintf(format, args...))
+	if logLevel > 2 {
+		return
+	}
+	if len(args) == 0 {
+		format += "\n" // append line break if no arg
+	}
+	fmt.Printf("%s %s %s",
+		time.Now().Local().Format("[2006-01-02 15:04:05]"),
+		"WARN",
+		fmt.Sprintf(format, args...))
 }
 
 func Error(format string, args ...any) {
-	slog.Error(fmt.Sprintf(format, args...))
+	if logLevel > 3 {
+		return
+	}
+	if len(args) == 0 {
+		format += "\n" // append line break if no arg
+	}
+	fmt.Printf("%s %s %s",
+		time.Now().Local().Format("[2006-01-02 15:04:05]"),
+		"ERROR",
+		fmt.Sprintf(format, args...))
 }
 
 func init() {
@@ -95,6 +139,8 @@ func init() {
 	if len(dns) > 0 {
 		defaultDialer.Resolver = defaultResolver
 	}
+
+	logLevel = LogLevel(*logLevelF)
 
 	if *verF {
 		println(version)

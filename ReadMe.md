@@ -21,6 +21,8 @@ Usage of ./fpgo:
   -c int
         Max concurrency for fasthttp server (default 512)
   -h    Show usage
+  -l int
+        Log level. Examples: 0 (debug), 1 (info), 2 (warn), 3 (error). Default is 1 (default 1)
   -n string
         DNS nameserves, E.g. "8.8.8.8:53" or "1.1.1.1:53,8.8.8.8:53". Default is empty
   -t duration
