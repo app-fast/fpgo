@@ -38,7 +38,7 @@ var (
 	maxConcurrentF = flag.Int("c", DefaultMaxConcurrent, "Max concurrency for fasthttp server")
 	dnsresolversF  = flag.String("n", DefaultDNS, `DNS nameserves, E.g. "8.8.8.8:53" or "1.1.1.1:53,8.8.8.8:53". Default is empty`)
 	timeoutF       = flag.Duration("t", DefaultTimeout, `Connection timeout. Examples: 1m or 10s`)
-	logLevelF      = flag.Int("l", DefaultLogLevel, `Log level. Examples: 0 (debug), 1 (info), 2 (warn), 3 (error). Default is 1`)
+	logLevelF      = flag.Int("l", DefaultLogLevel, `Log level. Examples: 0 (debug), 1 (info), 2 (warn), 3 (error).`)
 	usageF         = flag.Bool("h", false, "Show usage")
 	verF           = flag.Bool("v", false, "Show version")
 
