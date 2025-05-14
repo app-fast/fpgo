@@ -41,9 +41,10 @@ curl -x http://localhost:13002 http(s)://example.com
 
 This proxy server was used as a cheap knock-off of NAT Gateways originally, and was tuned for maximum performance, flexibility and less dependencies in our environments. But we've seen more and more people use it in production, so it's our responsibility to make sure everyone knows the following:
 
+* This is not a reverse proxy. The difference is that a forward proxy protects clients while a reverse proxy protects servers.
 * Unlike other forward proxies like Squid, responses or files are not cached.
 * Unlike other forward proxies, fpgo doesn't support user:password authentication, so beware of hackers taking over.
-* A socks5 proxy is probably faster than a http proxy. If fpgo is fall short of expectations, take a look at socks5 implementations in go/rust. Nevertheless, not all http clients support socks5 forward proxy.
+* A socks5 proxy is probably faster than a http proxy. If fpgo falls short of expectations, take a look at socks5 implementations in go/rust/zig. Nevertheless, not all http clients support socks5 forward proxy.
 
 ### Credits
 
