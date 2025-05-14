@@ -6,7 +6,7 @@
 * http/https proxy
 * ws/wss proxy
 * Transparent Compression
-* Multi DNS nameserves (-n "1.1.1.1:53,8.8.8.8:53")
+* Multi DNS nameserves (-n "1.1.1.1,8.8.8.8")
 * Graceful shutdown
 * battle-tested and production ready
 
@@ -24,7 +24,7 @@ Usage of ./fpgo:
   -l int
         Log level. Examples: 0 (debug), 1 (info), 2 (warn), 3 (error). (default 1)
   -n string
-        DNS nameserves, E.g. "8.8.8.8:53" or "1.1.1.1:53,8.8.8.8:53". Default is empty
+        DNS nameserves, E.g. "8.8.8.8" or "1.1.1.1,8.8.8.8". Default is empty
   -t duration
         Connection timeout. Examples: 1m or 10s (default 1m0s)
   -v    Show version
@@ -33,7 +33,7 @@ Usage of ./fpgo:
 ### Example
 
 ```fish
-./fpgo -a "0.0.0.0:13002" -c 1000 -n "8.8.8.8:53,1.1.1.1:53" -t 30s
+./fpgo -a "0.0.0.0:13002" -c 1000 -n "8.8.8.8,1.1.1.1" -t 30s
 curl -x http://localhost:13002 http(s)://example.com
 ```
 
