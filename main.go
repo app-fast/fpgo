@@ -176,7 +176,7 @@ func handleFastHTTP(ctx *fasthttp.RequestCtx) {
 func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
 	Info("Connect to: https://%s\n", ctx.Host())
 	ctx.Hijack(func(clientConn net.Conn) {
-		destConn, err := defaultDialer.DialTimeout(b2s(ctx.Host()), 10*time.Second)
+		destConn, err := defaultDialer.DialTimeout(b2s(ctx.Host()), timeout)
 		if err != nil {
 			Error("Dial timeout: %s", err)
 			return
