@@ -43,7 +43,7 @@ This proxy server was used as a cheap knock-off of NAT Gateways originally, and 
 
 * This is not a reverse proxy. The difference is that a forward proxy protects clients while a reverse proxy protects servers.
 * Unlike other forward proxies like Squid, responses or files are not cached.
-* Unlike other forward proxies, fpgo doesn't support user:password authentication, so beware of hackers taking over.
+* Unlike other forward proxies, fpgo doesn't support user:password authentication, so beware of hackers taking over and use it as a jump server.
 * HTTPS prevents a forward proxy recording network traffics, see [#1](https://github.com/app-fast/fpgo/issues/1) .
 * A socks5 proxy is probably faster than a http proxy. If fpgo falls short of expectations, take a look at socks5 implementations in go/rust/zig. Nevertheless, not all http clients support socks5 forward proxy.
 

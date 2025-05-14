@@ -70,56 +70,44 @@ var (
 	}
 )
 
-func Debug(format string, args ...any) {
-	if logLevel > 0 {
+func Logging(level LogLevel, format string, args ...any) {
+	if logLevel > level {
 		return
 	}
 	if len(args) == 0 {
 		format += "\n" // append line break if no arg
 	}
+
 	fmt.Printf("%s %s %s",
 		time.Now().Local().Format("[2006-01-02 15:04:05]"),
-		"DEBUG",
+		func(level LogLevel) string {
+			switch level {
+			case LogLevelDebug:
+				return "DEBUG"
+			case LogLevelInfo:
+				return "INFO"
+			case LogLevelWarn:
+				return "WARN"
+			}
+			return "ERROR"
+		}(level),
 		fmt.Sprintf(format, args...))
+}
+
+func Debug(format string, args ...any) {
+	Logging(LogLevelDebug, format, args...)
 }
 
 func Info(format string, args ...any) {
-	if logLevel > 1 {
-		return
-	}
-	if len(args) == 0 {
-		format += "\n" // append line break if no arg
-	}
-	fmt.Printf("%s %s %s",
-		time.Now().Local().Format("[2006-01-02 15:04:05]"),
-		"INFO",
-		fmt.Sprintf(format, args...))
+	Logging(LogLevelInfo, format, args...)
 }
 
 func Warn(format string, args ...any) {
-	if logLevel > 2 {
-		return
-	}
-	if len(args) == 0 {
-		format += "\n" // append line break if no arg
-	}
-	fmt.Printf("%s %s %s",
-		time.Now().Local().Format("[2006-01-02 15:04:05]"),
-		"WARN",
-		fmt.Sprintf(format, args...))
+	Logging(LogLevelWarn, format, args...)
 }
 
 func Error(format string, args ...any) {
-	if logLevel > 3 {
-		return
-	}
-	if len(args) == 0 {
-		format += "\n" // append line break if no arg
-	}
-	fmt.Printf("%s %s %s",
-		time.Now().Local().Format("[2006-01-02 15:04:05]"),
-		"ERROR",
-		fmt.Sprintf(format, args...))
+	Logging(LogLevelError, format, args...)
 }
 
 func init() {
