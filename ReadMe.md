@@ -5,7 +5,7 @@
 * Fasthttp
 * http/https proxy
 * ws/wss proxy
-* Compression
+* Transparent Compression
 * Multi DNS nameserves (-n "1.1.1.1:53,8.8.8.8:53")
 * Graceful shutdown
 * battle-tested and production ready
