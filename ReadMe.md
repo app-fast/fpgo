@@ -24,7 +24,7 @@ Usage of ./fpgo:
   -l int
         Log level. Examples: 0 (debug), 1 (info), 2 (warn), 3 (error). (default 1)
   -n string
-        DNS nameserves, E.g. "8.8.8.8" or "1.1.1.1,8.8.8.8". Default is empty
+        DNS nameserves, E.g. "8.8.8.8" or "1.1.1.1,8.8.8.8". Default is empty (os default)
   -t duration
         Connection timeout. Examples: 1m or 10s (default 1m0s)
   -v    Show version
