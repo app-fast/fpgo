@@ -5,7 +5,7 @@
 * Fasthttp
 * http/https proxy
 * ws/wss proxy
-* IPv4/IPv6 supported
+* IPv4/IPv6 supported (See [#2](https://github.com/app-fast/fpgo/pull/2))
 * Transparent Compression
 * Multi DNS nameserves (-n "1.1.1.1,8.8.8.8")
 * Graceful shutdown
