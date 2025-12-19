@@ -20,9 +20,9 @@ type LogLevel uint8
 
 const (
 	DefaultMaxConcurrent = 512
-	DefaultAddr          = ":13002"
-	DefaultDNS           = ""
-	DefaultTimeout       = 60 * time.Second
+	DefaultAddr	     = ":13002"
+	DefaultDNS	     = ""
+	DefaultTimeout	     = 60 * time.Second
 	DefaultLogLevel      = 1
 
 	LogLevelDebug LogLevel = 0
@@ -34,20 +34,20 @@ const (
 var (
 	version = "dev"
 
-	addrF          = flag.String("a", DefaultAddr, `Listen address.`)
+	addrF	       = flag.String("a", DefaultAddr, `Listen address.`)
 	maxConcurrentF = flag.Int("c", DefaultMaxConcurrent, "Max concurrency for fasthttp server")
 	dnsresolversF  = flag.String("n", DefaultDNS, `DNS nameserves, E.g. "8.8.8.8" or "1.1.1.1,8.8.8.8". Default is empty (OS default)`)
 	timeoutF       = flag.Duration("t", DefaultTimeout, `Connection timeout. Examples: 1m or 10s`)
 	logLevelF      = flag.Int("l", DefaultLogLevel, `Log level. Examples: 0 (debug), 1 (info), 2 (warn), 3 (error).`)
-	usageF         = flag.Bool("h", false, "Show usage")
-	verF           = flag.Bool("v", false, "Show version")
+	usageF	       = flag.Bool("h", false, "Show usage")
+	verF	       = flag.Bool("v", false, "Show version")
 
-	addr          string
+	addr	      string
 	maxConcurrent int
-	dns           []string
+	dns	      []string
 	timeout       time.Duration
 	logLevel      LogLevel
-	ver           string
+	ver	      string
 
 	defaultResolver = &net.Resolver{
 		PreferGo:     true,
@@ -59,14 +59,14 @@ var (
 	}
 
 	defaultDialer = fasthttp.TCPDialer{
-		Concurrency:      maxConcurrent,
+		Concurrency:	  maxConcurrent,
 		DNSCacheDuration: time.Minute,
 	}
 
 	fastclient = fasthttp.Client{
 		NoDefaultUserAgentHeader: true,
-		Dial:                     defaultDialer.DialDualStack,
-		MaxConnWaitTimeout:       10 * time.Second,
+		Dial:			  defaultDialer.DialDualStack,
+		MaxConnWaitTimeout:	  10 * time.Second,
 	}
 )
 
@@ -75,7 +75,7 @@ func Logging(level LogLevel, format string, args ...any) {
 		return
 	}
 	if len(args) == 0 {
-		format += "\n" // append line break if no arg
+		format += "\n"
 	}
 
 	fmt.Printf("%s %s %s",
@@ -163,7 +163,19 @@ func handleFastHTTP(ctx *fasthttp.RequestCtx) {
 
 func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
 	Info("Connect to: https://%s\n", ctx.Host())
+
+	// Tell fasthttp not to send any automatic response
+	ctx.HijackSetNoResponse(true)
+
 	ctx.Hijack(func(clientConn net.Conn) {
+		// Manually write the 200 OK response without Connection: close
+		_, err := clientConn.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
+		if err != nil {
+			Error("Failed to send CONNECT response: %s", err)
+			return
+		}
+
+		// Now establish the tunnel to the destination
 		destConn, err := defaultDialer.DialTimeout(b2s(ctx.Host()), timeout)
 		if err != nil {
 			Error("Dial timeout: %s", err)
@@ -178,13 +190,10 @@ func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
 	})
 }
 
-// Unsafe but fast []byte to string convertion without memory copy
 func b2s(b []byte) string {
-	/* #nosec G103 */
 	return *(*string)(unsafe.Pointer(&b))
 }
 
-// wait graceful shutdown
 func wait(server *fasthttp.Server) <-chan struct{} {
 	graceful.NewManager().AddRunningJob(func(ctx context.Context) error {
 		<-ctx.Done()
@@ -201,7 +210,6 @@ func wait(server *fasthttp.Server) <-chan struct{} {
 	return graceful.NewManager().Done()
 }
 
-// request handler in fasthttp style, i.e. just plain function.
 func fastHTTPHandler(ctx *fasthttp.RequestCtx) {
 	switch strings.ToUpper(b2s(ctx.Method())) {
 	case fasthttp.MethodConnect:
@@ -213,18 +221,17 @@ func fastHTTPHandler(ctx *fasthttp.RequestCtx) {
 
 func main() {
 	server := &fasthttp.Server{
-		Handler:            fasthttp.CompressHandler(fastHTTPHandler),
-		ReadTimeout:        timeout,
-		WriteTimeout:       timeout,
-		MaxConnsPerIP:      1024,
+		Handler:	    fasthttp.CompressHandler(fastHTTPHandler),
+		ReadTimeout:	    timeout,
+		WriteTimeout:	    timeout,
+		MaxConnsPerIP:	    1024,
 		MaxRequestsPerConn: 1024,
-		IdleTimeout:        3 * timeout,
+		IdleTimeout:	    3 * timeout,
 		ReduceMemoryUsage:  true,
 		CloseOnShutdown:    true,
-		Concurrency:        maxConcurrent,
+		Concurrency:	    maxConcurrent,
 	}
 
-	// Start server
 	go func() {
 		Info("Version: %s\n", ver)
 		Info("Concurrency: %d\n", maxConcurrent)
