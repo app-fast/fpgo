@@ -2,7 +2,7 @@
 
 ### ✅ Features
 
-- Fasthttp
+- [Fasthttp](https://github.com/valyala/fasthttp)
 - http/https proxy
 - ws/wss proxy
 - IPv4/IPv6 supported (See [#2](https://github.com/app-fast/fpgo/pull/2))
@@ -20,7 +20,7 @@ Usage of ./fpgo:
   -a string
         Listen address. (default ":13002")
   -c int
-        Max concurrency for fasthttp server (default 512)
+        Max concurrency for fasthttp server (default 128)
   -h    Show usage
   -l int
         Log level. Examples: 0 (debug), 1 (info), 2 (warn), 3 (error). (default 1)

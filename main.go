@@ -19,7 +19,7 @@ import (
 type LogLevel uint8
 
 const (
-	DefaultMaxConcurrent = 512
+	DefaultMaxConcurrent = 128
 	DefaultAddr          = ":13002"
 	DefaultDNS           = ""
 	DefaultTimeout       = 60 * time.Second
