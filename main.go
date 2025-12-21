@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"math/rand"
+	"math/rand/v2"
 	"net"
 	"os"
 	"strings"
@@ -139,7 +139,7 @@ func init() {
 }
 
 func randomDNS() string {
-	return dns[rand.Intn(len(dns))] + ":53"
+	return dns[rand.IntN(len(dns))] + ":53"
 }
 
 func transfer(destination io.WriteCloser, source io.ReadCloser) {
