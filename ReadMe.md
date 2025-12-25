@@ -9,6 +9,7 @@
 - Transparent Compression
 - Multi DNS nameserves (-n "1.1.1.1,8.8.8.8")
 - Graceful shutdown
+- Proxy Chain
 - Battle-Tested and Production-Ready
 
 ### 📙 Usage
@@ -18,23 +19,33 @@
 
 Usage of ./fpgo:
   -a string
-        Listen address. (default ":13002")
+    	Listen address. (default ":13002")
   -c int
-        Max concurrency for fasthttp server (default 128)
-  -h    Show usage
+    	Max concurrency for fasthttp server (default 128)
+  -h	Show usage
   -l int
-        Log level. Examples: 0 (debug), 1 (info), 2 (warn), 3 (error). (default 1)
+    	Log level. Examples: 0 (debug), 1 (info), 2 (warn), 3 (error). (default 1)
   -n string
-        DNS nameserves, E.g. "8.8.8.8" or "1.1.1.1,8.8.8.8". Default is empty (OS default)
+    	DNS nameserves, E.g. "8.8.8.8" or "1.1.1.1,8.8.8.8". Default is empty (OS default)
   -t duration
-        Connection timeout. Examples: 1m or 10s (default 1m0s)
-  -v    Show version
+    	Connection timeout. Examples: 1m or 10s (default 1m0s)
+  -v	Show version
+  -x string
+    	Set up a proxy chain. E.g. "localhost:12345"
 ```
 
-### 💡 Example
+#### 💡 Basic Example
 
 ```fish
 ./fpgo -a "0.0.0.0:13002" -c 1000 -n "8.8.8.8,1.1.1.1" -t 30s
+curl -x http://localhost:13002 http(s)://example.com
+```
+
+#### 💡 Proxy Chain Example
+
+```fish
+./fpgo -a "0.0.0.0:13001"  # Proxy 1
+./fpgo -a "0.0.0.0:13002" -x "localhost:13001" # Proxy 2
 curl -x http://localhost:13002 http(s)://example.com
 ```
 

@@ -39,6 +39,7 @@ var (
 	dnsresolversF  = flag.String("n", DefaultDNS, `DNS nameserves, E.g. "8.8.8.8" or "1.1.1.1,8.8.8.8". Default is empty (OS default)`)
 	timeoutF       = flag.Duration("t", DefaultTimeout, `Connection timeout. Examples: 1m or 10s`)
 	logLevelF      = flag.Int("l", DefaultLogLevel, `Log level. Examples: 0 (debug), 1 (info), 2 (warn), 3 (error).`)
+	proxyF         = flag.String("x", "", `Set up a proxy chain. E.g. "localhost:12345"`)
 	usageF         = flag.Bool("h", false, "Show usage")
 	verF           = flag.Bool("v", false, "Show version")
 
@@ -48,6 +49,7 @@ var (
 	timeout       time.Duration
 	logLevel      LogLevel
 	ver           string
+	proxyChain    string
 
 	defaultResolver = &net.Resolver{
 		PreferGo:     true,
@@ -123,6 +125,7 @@ func init() {
 		return c == ','
 	})
 	timeout = *timeoutF
+	proxyChain = *proxyF
 
 	if len(dns) > 0 {
 		defaultDialer.Resolver = defaultResolver
@@ -142,6 +145,43 @@ func randomDNS() string {
 	return dns[rand.IntN(len(dns))] + ":53"
 }
 
+func dialThroughProxy(host string, timeout time.Duration) (net.Conn, error) {
+	if proxyChain == "" {
+		return defaultDialer.DialTimeout(host, timeout)
+	}
+
+	// Connect to the upstream proxy
+	proxyConn, err := defaultDialer.DialTimeout(proxyChain, timeout)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to proxy %s: %w", proxyChain, err)
+	}
+
+	// Send CONNECT request to the proxy
+	connectReq := fmt.Sprintf("CONNECT %s HTTP/1.1\r\nHost: %s\r\n\r\n", host, host)
+	if _, err := proxyConn.Write([]byte(connectReq)); err != nil {
+		proxyConn.Close()
+		return nil, fmt.Errorf("failed to send CONNECT to proxy: %w", err)
+	}
+
+	// Read the response from the proxy
+	buf := make([]byte, 4096)
+	n, err := proxyConn.Read(buf)
+	if err != nil {
+		proxyConn.Close()
+		return nil, fmt.Errorf("failed to read CONNECT response: %w", err)
+	}
+
+	// Check if the proxy accepted the connection (200 OK)
+	response := string(buf[:n])
+	if !strings.Contains(response, "200") {
+		proxyConn.Close()
+		return nil, fmt.Errorf("proxy rejected CONNECT: %s", strings.Split(response, "\r\n")[0])
+	}
+
+	Debug("Connected through proxy %s to %s", proxyChain, host)
+	return proxyConn, nil
+}
+
 func transfer(destination io.WriteCloser, source io.ReadCloser) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -156,7 +196,21 @@ func transfer(destination io.WriteCloser, source io.ReadCloser) {
 
 func handleFastHTTP(ctx *fasthttp.RequestCtx) {
 	Info("Connect to: http://%s\n", ctx.Host())
-	if err := fastclient.DoTimeout(&ctx.Request, &ctx.Response, timeout); err != nil {
+
+	client := &fastclient
+	if proxyChain != "" {
+		// Create a custom client that dials through the proxy
+		proxyClient := &fasthttp.Client{
+			NoDefaultUserAgentHeader: true,
+			Dial: func(addr string) (net.Conn, error) {
+				return dialThroughProxy(addr, timeout)
+			},
+			MaxConnWaitTimeout: 10 * time.Second,
+		}
+		client = proxyClient
+	}
+
+	if err := client.DoTimeout(&ctx.Request, &ctx.Response, timeout); err != nil {
 		Error("Client timeout: %s", err)
 	}
 }
@@ -175,8 +229,8 @@ func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
-		// Now establish the tunnel to the destination
-		destConn, err := defaultDialer.DialTimeout(b2s(ctx.Host()), timeout)
+		// Now establish the tunnel to the destination (through proxy if configured)
+		destConn, err := dialThroughProxy(b2s(ctx.Host()), timeout)
 		if err != nil {
 			Error("Dial timeout: %s", err)
 			return
