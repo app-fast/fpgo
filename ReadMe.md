@@ -9,7 +9,7 @@
 - Transparent Compression
 - Multi DNS nameserves (-n "1.1.1.1,8.8.8.8")
 - Graceful shutdown
-- Proxy Chain
+- Proxy Chain (-x "second.proxy.addr:8080")
 - Battle-Tested and Production-Ready
 
 ### 📙 Usage
