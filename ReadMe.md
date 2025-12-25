@@ -46,7 +46,8 @@ curl -x http://localhost:13002 http(s)://example.com
 ```fish
 ./fpgo -a "0.0.0.0:13001"  # Proxy 1
 ./fpgo -a "0.0.0.0:13002" -x "localhost:13001" # Proxy 2
-curl -x http://localhost:13002 http(s)://example.com
+./fpgo -a "0.0.0.0:13003" -x "localhost:13002" # Proxy 3
+curl -x http://localhost:13003 http(s)://example.com
 ```
 
 ### 📌 Caveats
