@@ -222,8 +222,8 @@ func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
 	ctx.HijackSetNoResponse(true)
 
 	ctx.Hijack(func(clientConn net.Conn) {
-		// Manually write the 200 OK response without Connection: close
-		_, err := clientConn.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
+		// Manually write the 200 Connection Established response for CONNECT
+		_, err := clientConn.Write([]byte("HTTP/1.1 200 Connection Established\r\n\r\n"))
 		if err != nil {
 			Error("Failed to send CONNECT response: %s", err)
 			return
@@ -275,7 +275,7 @@ func fastHTTPHandler(ctx *fasthttp.RequestCtx) {
 
 func main() {
 	server := &fasthttp.Server{
-		Handler:            fasthttp.CompressHandler(fastHTTPHandler),
+		Handler:            fastHTTPHandler,
 		ReadTimeout:        timeout,
 		WriteTimeout:       timeout,
 		MaxConnsPerIP:      1024,
