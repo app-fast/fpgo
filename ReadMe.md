@@ -51,7 +51,7 @@ curl -x http://localhost:13003 http(s)://example.com
 
 ### 📌 Caveats
 
-This proxy server was used as a cheap knock-off of NAT Gateways originally, and was tuned for maximum performance, flexibility and less dependencies in our environments. But we've seen more and more people use it in production, so it's our responsibility to make sure everyone knows the following:
+This proxy server was used as a cheap knock-off of NAT Gateways on low-end hardwares originally, and was tuned for maximum performance, flexibility and less dependencies in our environments. But we've seen more and more people use it in production, so it's our responsibility to make sure everyone knows the following:
 
 - This is not a reverse proxy. The difference is that a forward proxy protects clients while a reverse proxy protects servers.
 - Unlike other forward proxies like Squid, responses or files are not cached.
