@@ -49,6 +49,13 @@ curl -x http://localhost:13002 http(s)://example.com
 curl -x http://localhost:13003 http(s)://example.com
 ```
 
+#### 💡 Websocket Example
+
+```fish
+./fpgo -a "0.0.0.0:13002"
+wscat --proxy http://localhost:13002 -c wss://websocket-echo.com
+```
+
 ### 📌 Caveats
 
 This proxy server was used as a cheap knock-off of NAT Gateways on low-end hardwares originally, and was tuned for maximum performance, flexibility and less dependencies in our environments. But we've seen more and more people use it in production, so it's our responsibility to make sure everyone knows the following:
