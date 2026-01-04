@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
@@ -8,7 +9,6 @@ import (
 	"math/rand/v2"
 	"net"
 	"os"
-	"strings"
 	"time"
 	"unsafe"
 
@@ -54,7 +54,7 @@ var (
 	defaultResolver = &net.Resolver{
 		PreferGo:     true,
 		StrictErrors: false,
-		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+		Dial: func(ctx context.Context, _, _ string) (net.Conn, error) {
 			d := net.Dialer{}
 			return d.DialContext(ctx, "udp", randomDNS())
 		},
@@ -121,9 +121,13 @@ func init() {
 
 	addr = *addrF
 	maxConcurrent = *maxConcurrentF
-	dns = strings.FieldsFunc(*dnsresolversF, func(c rune) bool {
+	dnsBytes := bytes.FieldsFunc([]byte(*dnsresolversF), func(c rune) bool {
 		return c == ','
 	})
+	dns = make([]string, len(dnsBytes))
+	for i, b := range dnsBytes {
+		dns[i] = string(b)
+	}
 	timeout = *timeoutF
 	proxyChain = *proxyF
 
@@ -172,10 +176,10 @@ func dialThroughProxy(host string, timeout time.Duration) (net.Conn, error) {
 	}
 
 	// Check if the proxy accepted the connection (200 OK)
-	response := string(buf[:n])
-	if !strings.Contains(response, "200") {
+	response := buf[:n]
+	if !bytes.Contains(response, []byte("200")) {
 		proxyConn.Close()
-		return nil, fmt.Errorf("proxy rejected CONNECT: %s", strings.Split(response, "\r\n")[0])
+		return nil, fmt.Errorf("proxy rejected CONNECT: %s", b2s(bytes.Split(response, []byte("\r\n"))[0]))
 	}
 
 	Debug("Connected through proxy %s to %s", proxyChain, host)
@@ -195,7 +199,7 @@ func transfer(destination io.WriteCloser, source io.ReadCloser) {
 }
 
 func handleFastHTTP(ctx *fasthttp.RequestCtx) {
-	Info("Connect to: http://%s\n", ctx.Host())
+	Info("Connect to: http://%s\n", b2s(ctx.Host()))
 
 	client := &fastclient
 	if proxyChain != "" {
@@ -216,7 +220,11 @@ func handleFastHTTP(ctx *fasthttp.RequestCtx) {
 }
 
 func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
-	Info("Connect to: https://%s\n", ctx.Host())
+	// RFC 7231: The CONNECT method identifies the destination server by the request-target.
+	targetBuf := ctx.Request.Header.RequestURI()
+	targetBuf = bytes.TrimPrefix(targetBuf, []byte("/"))
+	target := b2s(targetBuf)
+	Info("Connect to: https://%s\n", target)
 
 	// Tell fasthttp not to send any automatic response
 	ctx.HijackSetNoResponse(true)
@@ -230,7 +238,7 @@ func handleFastHTTPS(ctx *fasthttp.RequestCtx) {
 		}
 
 		// Now establish the tunnel to the destination (through proxy if configured)
-		destConn, err := dialThroughProxy(b2s(ctx.Host()), timeout)
+		destConn, err := dialThroughProxy(target, timeout)
 		if err != nil {
 			Error("Dial timeout: %s", err)
 			return
@@ -265,10 +273,10 @@ func wait(server *fasthttp.Server) <-chan struct{} {
 }
 
 func fastHTTPHandler(ctx *fasthttp.RequestCtx) {
-	switch strings.ToUpper(b2s(ctx.Method())) {
-	case fasthttp.MethodConnect:
+	method := ctx.Method()
+	if bytes.Equal(method, []byte(fasthttp.MethodConnect)) {
 		handleFastHTTPS(ctx)
-	default:
+	} else {
 		handleFastHTTP(ctx)
 	}
 }
@@ -289,7 +297,7 @@ func main() {
 	go func() {
 		Info("Version: %s\n", ver)
 		Info("Concurrency: %d\n", maxConcurrent)
-		Info("Nameservers: %s\n", dns)
+		Info("Nameservers: %v\n", dns)
 		Info("Connection timeout is %s\n", timeout)
 		Info("listening on address %s\n", addr)
 		if err := server.ListenAndServe(addr); err != nil {
